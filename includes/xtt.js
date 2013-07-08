@@ -1,20 +1,3 @@
-// ==UserScript==
-// @include 		http://www.youtube.com/*
-// @include 		https://www.youtube.com/*
-// @include 		http://www.youtube-nocookie.com/*
-// @include 		https://www.youtube-nocookie.com/*
-// @exclude			http://www.youtube.com/my_*
-// @exclude			https://www.youtube.com/my_*
-// @exclude			http://www.youtube.com/inbox*
-// @exclude			https://www.youtube.com/inbox*
-// @exclude			http://www.youtube.com/account*
-// @exclude			https://www.youtube.com/account*
-// @exclude			http://www.youtube.com/editor*
-// @exclude			https://www.youtube.com/editor*
-// @exclude			http://www.youtube.com/analytics*
-// @exclude			https://www.youtube.com/analytics*
-// ==/UserScript==
-
 /*
  * Copyright 2010 2011 2012 2013 Darko Pantić (pdarko@myopera.com)
  *
@@ -39,7 +22,7 @@
  * @license Apache License, Version 2.0
  */
 
-(function (window, document, opera, extension, widget) {
+(function (window, document, extension, chrome) {
 // Redirect “/v/*” pages to “/watch_popup?v=*”.
 if (/^\/v\//.test(window.location.pathname)) {
 	window.location.replace(window.location.href.replace(/\?/, "&")
@@ -49,14 +32,18 @@ if (/^\/v\//.test(window.location.pathname)) {
 
 document.addEventListener("DOMContentLoaded", domContentLoaded, false)
 
-extension.addEventListener("disconnect", connectionLost, false)
-extension.addEventListener("message", messageReceived, false)
+// extension.addEventListener("disconnect", connectionLost, false)
+// extension.addEventListener("message", messageReceived, false)
+chrome.runtime.onMessage.addListener(messageReceived)
 
-opera.addEventListener("AfterEvent.load", removeIFrameAds, false)
-opera.addEventListener("AfterScript", afterScript, false)
-opera.addEventListener("BeforeExternalScript", beforeExternalScript, false)
-opera.addEventListener("BeforeScript", beforeScript, false)
-opera.addEventListener("pluginInitialized", pluginInitialized, false)
+// TODO: ADS, may use webRequest block
+// opera.addEventListener("AfterEvent.load", removeIFrameAds, false)
+// opera.addEventListener("BeforeExternalScript", beforeExternalScript, false)
+// chrome.webRequest.onBeforeRequest.addListener(beforeExternalScript, {urls: ["http://*/*", "https://*/*"]}, ["blocking"])
+
+// opera.addEventListener("AfterScript", afterScript, false)
+// opera.addEventListener("BeforeScript", beforeScript, false)
+// opera.addEventListener("pluginInitialized", pluginInitialized, false)
 
 window.addEventListener("blur", windowBlurred, false)
 window.addEventListener("focus", windowFocused, false)
@@ -155,10 +142,12 @@ self.__defineGetter__("preferences", function () {
  * @namespace xtt
  */
 self.__defineGetter__("xtt", function () {
-	opera.xtt = makeApi()
+	console.log('xtt?')
+	window.xtt = makeApi()
 	delete self.xtt
-	self.xtt = opera.xtt
-	return opera.xtt
+	self.xtt = window.xtt
+	console.log('xtt!')
+	return window.xtt
 })
 
 var debug
@@ -528,7 +517,7 @@ function addExternalScript() {
 	script.setAttribute("type", "application/javascript")
 	script.setAttribute("src",
 		"data:application/javascript;base64," +
-		window.btoa("window.opera.xtt.writeFlashPlayer = " +
+		window.btoa("window.xtt.writeFlashPlayer = " +
 			writeFlashPlayer.toString()))
 
 	document.querySelector("head").appendChild(script)
@@ -741,7 +730,8 @@ function beforeScript(event) {
 		event.element.text = event.element.text.replace(/\.el="embedded"/, ".el=\"popout\"")
 	}
 	else
-		log.info('No rules for modifying this script. URI: ' + src + '.')
+		// log.info('No rules for modifying this script. URI: ' + src + '.')
+		console.info('No rules for modifying this script. URI: ' + src + '.')
 
 	// See if linked script is modified or not.
 	if (/opera\.xtt/.test(event.element.text))
@@ -1631,14 +1621,14 @@ function hideLyricsSearchLog(event) {
 
 function injectApiSetter(text) {
 	function apiSetter(api) {
-		if (typeof api != "object" || !window.opera.xtt)
+		if (typeof api != "object" || !window.xtt)
 			return
 
 		for (var p in api) {
 			if (typeof api[p] == "object" && api[p].addEventListener && api[p].destroy) {
-				window.opera.xtt.player.api = api[p]
+				window.xtt.player.api = api[p]
 				window.yt.config_.PLAYER_REFERENCE = api[p]
-				window.opera.xtt.player.playerReady()
+				window.xtt.player.playerReady()
 				return
 			}
 		}
@@ -4938,8 +4928,8 @@ function removeIFrameAds(event) {
 function removeListeners() {
 	document.removeEventListener("DOMContentLoaded", domContentLoaded, false)
 
-	opera.removeEventListener("BeforeScript", beforeExternalScript, false)
-	opera.removeEventListener("pluginInitialized", pluginInitialized, false)
+	// opera.removeEventListener("BeforeScript", beforeExternalScript, false)
+	// opera.removeEventListener("pluginInitialized", pluginInitialized, false)
 
 	window.removeEventListener("blur", windowBlurred, false)
 	window.removeEventListener("focus", windowFocused, false)
@@ -6169,4 +6159,4 @@ function writeLyrics(data) {
 		log.warn('Lyrics cannot be written to page. Nothing to write.')
 	}
 }
-})(window, window.document, window.opera, opera.extension, widget)
+})(window, window.document, chrome.extension, chrome)

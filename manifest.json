@@ -1,0 +1,53 @@
+{
+	"manifest_version"	: 2,
+	
+	"name"				: "ExtendTube",
+	"description"		: "Extend YouTube. Bend it to your will.",
+	"developer"			: {"name" : "Darko Pantić & André Zanghelini"},
+	"homepage_url"		: "http://my.opera.com/An-dz",
+	
+	"default_locale"	: "en",
+	"version"			: "1.19.1",
+	"icons"				: { "16": "share/image/fav.png", "64": "share/image/icon.png" },
+	
+	"content_scripts"	:
+	[{
+		"matches"			: [ "http://www.youtube.com/*",
+								"https://www.youtube.com/*",
+								"http://www.youtube-nocookie.com/*",
+								"https://www.youtube-nocookie.com/*"
+							  ],
+		"exclude_matches"	: [ "http://www.youtube.com/my_*",
+								"https://www.youtube.com/my_*",
+								"http://www.youtube.com/inbox*",
+								"https://www.youtube.com/inbox*",
+								"http://www.youtube.com/account*",
+								"https://www.youtube.com/account*",
+								"http://www.youtube.com/editor*",
+								"https://www.youtube.com/editor*",
+								"http://www.youtube.com/analytics*",
+								"https://www.youtube.com/analytics*"
+							  ],
+		// "css"				: ["includes/remove_default_bars.css"],
+		"js"				: ["includes/xtt.js"],
+		"run_at"			: "document_start"
+	}],
+	
+	"background"			: {"scripts": [
+								"lib/ext/Array.js",
+								"lib/ext/Date.js",
+								"lib/ext/Number.js",
+								"lib/ext/Object.js",
+								"lib/ext/Storage.js",
+								"lib/ext/String.js",
+								"lib/init.js",
+								"lib/localisedStrings.js",
+								"lib/style.js",
+								"lib/videoFormat.js",
+								"lib/preferences.js",
+								"lib/background.js"
+							]},
+  
+	"permissions"			: ["webRequest", "webRequestBlocking", "tabs", "storage"],
+	"options_page"			: "options.html"
+}
